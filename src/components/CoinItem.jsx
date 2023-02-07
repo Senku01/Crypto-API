@@ -1,13 +1,43 @@
-import React from 'react'
-import { AiOutlineStar } from 'react-icons/ai'
+import React, { useState } from 'react'
+import { AiOutlineStar,AiFillStar } from 'react-icons/ai'
 import { Sparklines, SparklinesLine } from 'react-sparklines'
 import { Link } from 'react-router-dom'
+import { UserAuth } from '../context/Auth'
+import {db} from '../firebase'
+import { arrayUnion,doc,updateDoc } from 'firebase/firestore'
 
 
 function CoinItem({ coin }) {
+
+
+    const [savedCoin,setSavedCoin]= useState(false)
+    const { user } = UserAuth()
+
+    const coinPath = doc(db,'users',`${user?.email}`)
+    const saveCoin =async () => {
+        if (user?.email){
+            setSavedCoin(true)
+            await updateDoc(coinPath,{
+                watchList: arrayUnion({
+                    id:coin.id,
+                    name:coin.name,
+                    image:coin.image,
+                    rank:coin.market_cap_rank,
+                    symbol:coin.symbol
+                })
+            })
+        } else {
+            alert("Sign in to save coin in your watch list")
+        }
+    }
+
     return (
         <tr className='h-[80px] border-b overflow-hidden'>
-            <td><AiOutlineStar /></td>
+            <td onClick={saveCoin}>
+                {
+                    savedCoin ? <AiFillStar/> : <AiOutlineStar />
+                }
+            </td>
             <td>{coin.market_cap_rank}</td>
             <td>
                 <Link to={`/coin/${coin.id}`}>
